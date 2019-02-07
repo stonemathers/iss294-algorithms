@@ -13,7 +13,7 @@
 - For fractal in list of Fractal objects
     - If last fractal in list && mouseIsPressed
         - fractal.increaseSize(1)
-        - fractal.draw()
+        - fractal.display()
     - Else
         - If fractal.stillDisplaying()
             - fractal.drawNextStep()
