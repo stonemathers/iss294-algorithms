@@ -25,7 +25,9 @@ let drawingStarted;
 //Mode variable (After drawing starts)
 const MODE_DRAW = 0;
 const MODE_DRAG = 1;
-const MODE_DISPLAY = 2;
+const MODE_ROTATE = 2;
+const MODE_ROTATE_AUTO = 3;
+const MODE_DISPLAY = 4;
 let mode = MODE_DISPLAY;
 
 //Drag vars
@@ -50,6 +52,7 @@ function setup(){
     createCanvas(windowWidth, windowHeight);
     drawingStarted = false;
     mode = MODE_DRAW;
+    angleMode(DEGREES);
     background(BG_COLOR);
     displayStartMessage();
 }
@@ -112,14 +115,20 @@ function mousePressed(){
     clickedFractal = getClosestClickedFractal();
 
     if(clickedFractal !== null){
-        mode = MODE_DRAG;
+        /*if(keyIsDown(32)){
+            mode = MODE_ROTATE;
+        }else if(keyIsDown(65)){
+            mode = MODE_ROTATE_AUTO;
+        }else{
+            mode = MODE_DRAG;
+        }*/
         dragCounter = DRAG_SPACING;
         blendMode(BLEND);
         clickedFractal.display();
     }else{
         mode = MODE_DRAW;
         fractalColor = color(COLOR_PALLETE[Math.floor(random(COLOR_PALLETE.length))]);
-        fractals.push(new Fractal(mouseX, mouseY, INIT_RAD, fractalColor));
+        fractals.push(new Fractal(mouseX, mouseY, INIT_RAD, fractalColor, 0));
     }
 }
 
@@ -127,11 +136,42 @@ function mousePressed(){
 * Run when mouse is dragged
 */
 function mouseDragged(){
-    if(mode == MODE_DRAG){
+    if(mode != MODE_DRAW){
+        if(keyIsDown(32)){
+            mode = MODE_ROTATE;
+        }else if(keyIsDown(65)){
+            mode = MODE_ROTATE_AUTO;
+        }else{
+            mode = MODE_DRAG;
+        }
+    }
+
+    if(mode == MODE_DRAG || mode == MODE_DRAW){
+        let moveFractal;
+
+        if(mode == MODE_DRAG){
+            moveFractal = clickedFractal;
+        }else{
+            moveFractal = fractals[fractals.length - 1];
+        }
+
         dragCounter--;
         if(dragCounter == 0){
-            clickedFractal.x = mouseX;
-            clickedFractal.y = mouseY;
+            moveFractal.x = mouseX;
+            moveFractal.y = mouseY;
+            blendMode(DIFFERENCE);
+            moveFractal.display();
+            dragCounter = DRAG_SPACING;
+        }
+    }else if(mode == MODE_ROTATE || mode == MODE_ROTATE_AUTO){
+        dragCounter --;
+        if(dragCounter == 0){
+            if(mode == MODE_ROTATE){
+                let newAng = degrees(atan((clickedFractal.y - mouseY)/(clickedFractal.x - mouseX)));
+                clickedFractal.angle = newAng;
+            }else{
+                clickedFractal.angle += 1;
+            }
             blendMode(DIFFERENCE);
             clickedFractal.display();
             dragCounter = DRAG_SPACING;
@@ -187,11 +227,12 @@ function getClosestClickedFractal(){
 * Class for Fractal object
 */
 class Fractal{
-    constructor(x, y, startSize, color){
+    constructor(x, y, startSize, color, angle){
         this.x = x;
         this.y = y;
         this.startSize = startSize;
         this.color = color;
+        this.angle = angle;
         this.stepsToDisplay = 1;
     }
 
@@ -230,10 +271,10 @@ class Fractal{
             let shift = size / 2;
             size = Math.round(size/FRACT_DIV);
             steps--;
-            this.fractalRecurse(x,          y + shift, size, steps); //top
-            this.fractalRecurse(x + shift,  y,         size, steps); //right
-            this.fractalRecurse(x,          y - shift, size, steps); //bottom
-            this.fractalRecurse(x - shift,  y,         size, steps); //left
+            this.fractalRecurse(x - (shift * sin(this.angle)), y - (shift * cos(this.angle)), size, steps); //top
+            this.fractalRecurse(x + (shift * cos(this.angle)), y - (shift * sin(this.angle)), size, steps); //right
+            this.fractalRecurse(x + (shift * sin(this.angle)), y + (shift * cos(this.angle)), size, steps); //bottom
+            this.fractalRecurse(x - (shift * cos(this.angle)), y + (shift * sin(this.angle)), size, steps); //left
         }
     }
 
