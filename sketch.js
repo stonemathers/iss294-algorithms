@@ -115,13 +115,6 @@ function mousePressed(){
     clickedFractal = getClosestClickedFractal();
 
     if(clickedFractal !== null){
-        /*if(keyIsDown(32)){
-            mode = MODE_ROTATE;
-        }else if(keyIsDown(65)){
-            mode = MODE_ROTATE_AUTO;
-        }else{
-            mode = MODE_DRAG;
-        }*/
         dragCounter = DRAG_SPACING;
         blendMode(BLEND);
         clickedFractal.display();
